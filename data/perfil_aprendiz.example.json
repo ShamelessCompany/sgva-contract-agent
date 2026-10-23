@@ -1,0 +1,104 @@
+{
+  "nombre": "Laura Camila Rojas Pérez",
+  "titulo": "Aprendiz Tecnólogo en Análisis y Desarrollo de Software",
+  "email": "laura.rojas@example.com",
+  "telefono": "+57 300 000 0000",
+  "ciudad": "Bucaramanga, Santander",
+  "linkedin": "linkedin.com/in/laura-rojas-dev",
+  "github": "github.com/laurarojas-dev",
+  "portafolio": "https://laurarojas.dev",
+
+  "programa_sena": "Tecnólogo en Análisis y Desarrollo de Software (ADSO)",
+  "centro_formacion": "Centro de Servicios Empresariales y Turísticos — Regional Santander",
+  "ficha": "2900000",
+  "disponibilidad": "Inmediata, tiempo completo para etapa productiva",
+
+  "resumen": "Aprendiz de ADSO con etapa lectiva finalizada. Desarrollo aplicaciones web de punta a punta, desde el levantamiento de requerimientos hasta el despliegue, con foco en código mantenible y bien documentado.",
+
+  "habilidades": {
+    "tecnicas": [
+      "Python (Django, FastAPI)",
+      "JavaScript",
+      "React",
+      "HTML/CSS",
+      "MySQL",
+      "PostgreSQL",
+      "Git y GitHub",
+      "APIs REST",
+      "Docker básico",
+      "Pruebas con pytest",
+      "UML y casos de uso",
+      "Scrum"
+    ],
+    "blandas": [
+      "Comunicación clara con usuarios no técnicos",
+      "Trabajo en equipo",
+      "Aprendizaje autónomo"
+    ]
+  },
+
+  "proyectos": [
+    {
+      "nombre": "Sistema de inventario para tienda de barrio",
+      "descripcion": "Aplicación web para registrar entradas, salidas y alertas de stock mínimo.",
+      "tecnologias": ["Python", "Django", "PostgreSQL", "Bootstrap"],
+      "logros": [
+        "Redujo el conteo manual de inventario de 3 horas a 20 minutos semanales",
+        "Reportes descargables en Excel para el dueño del negocio"
+      ],
+      "enlace": "https://github.com/laurarojas-dev/inventario-tienda"
+    },
+    {
+      "nombre": "Agenda de citas para consultorio",
+      "descripcion": "SPA con API REST para agendar, reprogramar y confirmar citas por correo.",
+      "tecnologias": ["React", "FastAPI", "MySQL", "Docker"],
+      "logros": [
+        "API documentada con OpenAPI y 85% de cobertura de pruebas"
+      ],
+      "enlace": "https://github.com/laurarojas-dev/agenda-citas"
+    },
+    {
+      "nombre": "Proyecto formativo ADSO: plataforma de gestión de fichas",
+      "descripcion": "Proyecto grupal SENA bajo Scrum: análisis de requerimientos, diagramas UML y desarrollo del módulo de reportes.",
+      "tecnologias": ["PHP", "Laravel", "MySQL", "UML"],
+      "logros": [
+        "Lideré el levantamiento de requerimientos con 4 instructores"
+      ],
+      "enlace": ""
+    }
+  ],
+
+  "experiencia": [
+    {
+      "cargo": "Auxiliar de soporte (medio tiempo)",
+      "empresa": "Papelería y Café Internet El Punto",
+      "periodo": "2024 – 2025",
+      "logros": [
+        "Mantenimiento preventivo de 12 equipos y atención a clientes"
+      ]
+    }
+  ],
+
+  "educacion": [
+    {
+      "titulo": "Tecnólogo en Análisis y Desarrollo de Software (en curso)",
+      "institucion": "SENA",
+      "periodo": "2025 – 2027"
+    },
+    {
+      "titulo": "Bachiller Académico",
+      "institucion": "Colegio Ejemplo",
+      "periodo": "2024"
+    }
+  ],
+
+  "certificaciones": [
+    "Fundamentos de Python — Cisco Networking Academy",
+    "Git y GitHub — curso virtual SENA"
+  ],
+
+  "idiomas": [
+    "Español (nativo)",
+    "Inglés (B1)"
+  ]
+}

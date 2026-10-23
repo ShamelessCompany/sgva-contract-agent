@@ -1,0 +1,33 @@
+# --- Secretos y sesión (NUNCA subir) ---
+.env
+session.json
+*.session.json
+
+# --- Datos personales y generados ---
+data/*
+!data/perfil_aprendiz.example.json
+!data/.gitkeep
+output/
+logs/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Empaquetado ---
+build/
+dist/
+.venv-build/
+*.spec.bak

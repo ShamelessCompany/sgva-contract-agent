@@ -1,0 +1,28 @@
+# SGVA-Matchmaker — dependencias (Python 3.10+)
+# Versiones fijadas y verificadas en octubre de 2026.
+
+# Navegador automatizado (después: `python -m playwright install chromium`)
+playwright==1.64.1
+
+# Configuración local (.env)
+python-dotenv==1.2.4
+
+# Búsqueda web pública (sucesor oficial de `duckduckgo-search`)
+ddgs==9.16.0
+
+# LLM: instala el del proveedor que uses (ambos por defecto)
+google-genai==2.33.0          # Google Gemini (reemplaza al obsoleto google-generativeai)
+openai==3.37.0                # OpenAI
+
+# Alertas
+python-telegram-bot==22.8
+
+# HTTP ligero para leer la portada pública de las empresas
+requests==2.34.2
+
+# Hoja de vida: Markdown → HTML → PDF
+markdown==3.11.2
+weasyprint==70.0              # requiere Pango (ver README); alternativa: pandoc + typst
+
+# Pruebas
+pytest==9.1.1

@@ -1,0 +1,30 @@
+# Metadatos del ejecutable de Windows (clic derecho → Propiedades → Detalles).
+# Actualiza filevers/prodvers y las cadenas de versión al publicar una nueva versión.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 1, 0, 0),
+    prodvers=(1, 1, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable('040A04B0', [
+        StringStruct('CompanyName', 'Shameless Company'),
+        StringStruct('FileDescription', 'Patronix - Asistente de etapa productiva y contratos de aprendizaje'),
+        StringStruct('FileVersion', '1.1.0'),
+        StringStruct('InternalName', 'Patronix'),
+        StringStruct('LegalCopyright', '(c) 2026 Shameless Company - Licencia MIT'),
+        StringStruct('OriginalFilename', 'Patronix.exe'),
+        StringStruct('ProductName', 'Patronix'),
+        StringStruct('ProductVersion', '1.1.0'),
+        StringStruct('Comments', 'Software independiente. NO es un producto oficial del SENA.')
+      ])
+    ]),
+    VarFileInfo([VarStruct('Translation', [0x040A, 1200])])
+  ]
+)

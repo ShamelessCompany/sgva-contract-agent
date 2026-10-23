@@ -1,0 +1,90 @@
+{
+  "_comentario": "Selectores CSS/Playwright del portal Caprendizaje. Cada clave acepta una LISTA de candidatos: se usa el primero que aparezca visible. Si el SENA cambia el portal, ajusta aquí (usa 'python main.py --calibrar' para inspeccionarlo). No hace falta tocar el código.",
+  "login": {
+    "_pestana_rol": "Pestaña que se pulsa antes de escribir las credenciales. En Caprendizaje la página abre en 'Empresas'; hay que elegir 'Aprendices' (verificado el 23/10/2026).",
+    "pestana_rol": [
+      "#aprendices",
+      "div:has(> span:text-is('Aprendices'))",
+      "text=Aprendices"
+    ],
+    "selector_tipo_documento": "",
+    "valor_tipo_documento": "",
+    "campo_usuario": [
+      "#tbLoginUsuario",
+      "input[id*='usuario' i]",
+      "input[id*='documento' i]",
+      "input[name*='user' i]",
+      "input[type='text'][id*='txt' i]",
+      "input[type='text']"
+    ],
+    "campo_clave": [
+      "#__tbPasswordUsuario",
+      "input[type='password']"
+    ],
+    "boton_ingresar": [
+      "#ini_session_aprendiz",
+      "input[type='submit'][value*='Iniciar sesi' i]",
+      "input[type='submit'][value*='Ingresar' i]",
+      "button:has-text('Ingresar')"
+    ],
+    "indicador_sesion": [
+      "a:has-text('Cerrar sesión')",
+      "a:has-text('Cerrar Sesión')",
+      "a:has-text('Salir')",
+      "[id*='logout' i]",
+      "[id*='cerrar' i]"
+    ],
+    "indicadores_captcha": [
+      "iframe[src*='recaptcha']",
+      "iframe[src*='hcaptcha']",
+      ".g-recaptcha",
+      ".h-captcha",
+      "img[src*='captcha' i]",
+      "input[id*='captcha' i]"
+    ],
+    "espera_manual_min": 5
+  },
+  "vacantes": {
+    "_pasos_menu": "Solo se usa si SGVA_VACANTES_URL está vacío: selectores a clicar en orden desde el inicio.",
+    "pasos_menu": [
+      [
+        "a:has-text('Contrato de Aprendizaje')",
+        "a:has-text('Aprendiz')"
+      ],
+      [
+        "a:has-text('Ofertas')",
+        "a:has-text('Convocatorias')",
+        "a:has-text('Vacantes')"
+      ]
+    ],
+    "filtro_programa": [
+      "select[id*='programa' i]",
+      "input[id*='programa' i]"
+    ],
+    "boton_buscar": [
+      "input[type='submit'][value*='Buscar' i]",
+      "button:has-text('Buscar')",
+      "input[type='submit'][value*='Consultar' i]"
+    ],
+    "tabla": [
+      "table[id*='gv' i]",
+      "table[id*='grid' i]",
+      "table[id*='vacante' i]",
+      "table[id*='oferta' i]",
+      "table.table",
+      "table"
+    ],
+    "_columnas_manual": "Opcional. Fuerza el índice (desde 0) de una columna si la detección por encabezado falla. Ej: {\"razon_social\": 1, \"ciudad\": 3}",
+    "columnas_manual": {},
+    "siguiente_pagina": [
+      "a[href*='Page$Next']",
+      "a:has-text('Siguiente')",
+      "a:has-text('>')",
+      "input[value='>']",
+      "li.next:not(.disabled) a"
+    ],
+    "_detalle_perfil": "Opcional. Si la tabla no trae el perfil completo, selectores del texto en la página de detalle. Vacío = no abrir detalles (más rápido y respetuoso).",
+    "detalle_perfil": []
+  },
+  "_verificado": "Login verificado contra https://caprendizaje.sena.edu.co/sgva/SGVA_Diseno/pag/login.aspx el 2026-10-23. La tabla de convocatorias (tras iniciar sesión) aún debe calibrarse con el asistente."
+}

@@ -1,0 +1,17 @@
+[project]
+name = "sgva-matchmaker"
+version = "1.1.0"
+description = "Búsqueda de contratos de aprendizaje, análisis empresarial y postulación personalizada (no oficial del SENA)"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Shameless Company" }]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["packaging/*.spec"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
