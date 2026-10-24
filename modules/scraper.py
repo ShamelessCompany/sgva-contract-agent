@@ -30,6 +30,7 @@ from typing import Any, Callable
 from urllib.parse import urljoin
 
 from config import Settings
+from modules import navegadores
 from modules.db import Database
 from modules.models import Vacante
 from modules.utils import (
@@ -37,7 +38,6 @@ from modules.utils import (
     limpiar,
     normalizar,
     polite_delay_async,
-    random_user_agent,
     retry_async,
     verificar_cancelacion,
 )
@@ -50,29 +50,23 @@ class NavegadorNoDisponible(RuntimeError):
 
 
 async def lanzar_navegador(pw: Any, canal: str, headless: bool, slow_mo: int = 0) -> Any:
-    """Lanza Chromium probando, en orden: el canal configurado (p. ej. Edge del sistema),
-    Google Chrome y el Chromium descargado por Playwright."""
-    candidatos: list[str | None] = []
-    if canal:
-        candidatos.append(canal)
-        if canal == "msedge":
-            candidatos.append("chrome")
-    candidatos.append(None)
+    """Lanza el navegador elegido (Edge, Chrome, Brave, Vivaldi) o, si no está instalado,
+    el siguiente disponible. Ver `modules/navegadores.py`."""
     errores: list[str] = []
-    for c in candidatos:
+    for nombre, opciones in navegadores.candidatos(canal, headless):
         try:
-            navegador = await pw.chromium.launch(channel=c, headless=headless, slow_mo=slow_mo)
-            log.debug("Navegador lanzado (canal=%s)", c or "chromium")
+            navegador = await pw.chromium.launch(slow_mo=slow_mo, **opciones)
+            log.debug("Navegador lanzado (%s)", nombre)
             try:
-                navegador.canal_sgva = c or "chromium"  # para el diagnóstico
+                navegador.canal_sgva = nombre  # para el diagnóstico
             except AttributeError:
                 pass
             return navegador
         except Exception as exc:  # noqa: BLE001
-            errores.append(f"{c or 'chromium'}: {str(exc).splitlines()[0]}")
+            errores.append(f"{nombre}: {str(exc).splitlines()[0]}")
     raise NavegadorNoDisponible(
-        "No se pudo abrir un navegador. Instala Microsoft Edge o Google Chrome "
-        "(o ejecuta `python -m playwright install chromium`). Detalle: " + " | ".join(errores)
+        "No se pudo abrir un navegador. Instala Microsoft Edge, Google Chrome o Brave. "
+        "Detalle: " + " | ".join(errores)
     )
 
 log = logging.getLogger(__name__)
@@ -227,19 +221,19 @@ class SGVAScraper:
         if self._pw is None:
             self._pw = await async_playwright().start()
         await self._cerrar_navegador()
-        self._browser = await lanzar_navegador(
-            self._pw, self.s.browser_channel, headless, slow_mo=0 if headless else 80
-        )
+        self._browser = await lanzar_navegador(self._pw, self.s.browser_channel, headless)
         estado = (
             str(self.s.session_path) if usar_sesion and self.s.session_path.exists() else None
         )
-        self.context = await self._browser.new_context(
-            storage_state=estado,
-            user_agent=random_user_agent(),
-            locale="es-CO",
-            timezone_id="America/Bogota",
-            viewport={"width": 1366, "height": 860},
-        )
+        opciones = navegadores.opciones_contexto(headless)
+        if headless:
+            # El modo oculto se anuncia como «HeadlessChrome»: se usa el UA real del mismo
+            # navegador sin esa marca (antes se usaba uno inventado que no coincidía).
+            prueba = await self._browser.new_page()
+            ua = await prueba.evaluate("navigator.userAgent")
+            await prueba.close()
+            opciones["user_agent"] = ua.replace("HeadlessChrome", "Chrome")
+        self.context = await self._browser.new_context(storage_state=estado, **opciones)
         self.context.set_default_timeout(self.s.timeout_ms)
         self.page = await self.context.new_page()
 
@@ -282,10 +276,10 @@ class SGVAScraper:
                 continue
         return None
 
-    async def _hay(self, candidatos: list[str]) -> bool:
+    async def _hay(self, candidatos: list[str], pagina: Any = None) -> bool:
         for selector in candidatos:
             try:
-                if await self.page.locator(selector).count() > 0:
+                if await (pagina or self.page).locator(selector).count() > 0:
                     return True
             except Exception:  # noqa: BLE001
                 continue
@@ -417,15 +411,21 @@ class SGVAScraper:
         log.warning(mensaje.replace("\n", " — "))
         self.aviso(mensaje)
         limite = asyncio.get_running_loop().time() + espera_min * 60
+        indicador = self.sel["login"].get("indicador_sesion", [])
         while asyncio.get_running_loop().time() < limite:
             await dormir_async(3)
+            if not self.context.pages:
+                raise RuntimeError("Se cerró el navegador antes de completar el inicio de sesión.")
             try:
-                if await self._hay(self.sel["login"].get("indicador_sesion", [])):
-                    await self._guardar_sesion()
-                    log.info("Sesión manual confirmada.")
-                    # Volver al modo configurado para el resto del recorrido
-                    await self._abrir(headless=self.s.headless, usar_sesion=True)
-                    return
+                # El portal puede abrir el panel en otra pestaña: se revisan todas.
+                for pagina in reversed(self.context.pages):
+                    if await self._hay(indicador, pagina):
+                        self.page = pagina
+                        await self._guardar_sesion()
+                        # Se sigue en ESTA ventana: cerrarla y abrir otra perdía la sesión
+                        # (el balanceador del portal la ata al navegador por pocos minutos).
+                        log.info("Sesión confirmada. La búsqueda continúa en esta misma ventana.")
+                        return
             except Exception:  # noqa: BLE001 - la página puede estar navegando
                 continue
         raise TimeoutError("No se completó el login manual a tiempo.")
@@ -625,6 +625,8 @@ class SGVAScraper:
             await self._ir(self.s.sgva_vacantes_url or self.s.sgva_login_url)
             await asyncio.get_running_loop().run_in_executor(None, esperar)
             verificar_cancelacion()
+            if self.context.pages:  # la tabla pudo quedar en otra pestaña
+                self.page = self.context.pages[-1]
             await self._guardar_sesion()
             sello = datetime.now().strftime("%Y%m%d_%H%M%S")
             (destino / f"convocatorias_{sello}.html").write_text(

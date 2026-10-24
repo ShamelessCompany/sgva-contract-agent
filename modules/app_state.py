@@ -67,7 +67,7 @@ class AjustesApp:
     sgva_vacantes_url: str = ""
     programa_formacion: str = "Análisis y Desarrollo de Software"
     palabras_clave: str = PALABRAS_POR_PROGRAMA["Análisis y Desarrollo de Software"]
-    navegador: str = "msedge"  # msedge | chrome | "" (Chromium de Playwright)
+    navegador: str = "auto"  # auto | msedge | chrome | brave | vivaldi (modules/navegadores.py)
     mostrar_navegador: bool = False
     llm_provider: str = "ninguno"  # ninguno | gemini | openai
     telegram_chat_id: str = ""

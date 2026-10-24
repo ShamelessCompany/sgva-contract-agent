@@ -26,7 +26,7 @@ from typing import Any, Callable
 
 import customtkinter as ctk
 
-from config import APP_NAME, DATA_HOME, RESOURCE_DIR, FROZEN
+from config import APP_NAME, DATA_HOME, RESOURCE_DIR
 from modules import __version__
 from modules.app_state import (
     PROGRAMAS_SENA,
@@ -45,16 +45,18 @@ from modules.app_state import (
     problemas_perfil,
 )
 from modules.db import Database
+from modules.navegadores import OPCIONES as NAVEGADORES
 from modules.utils import CANCELAR, Cancelado, setup_logging
 
 log = logging.getLogger("app")
 
 # --------------------------------------------------------------------- identidad visual
-ACENTO = ("#C2185B", "#E0457B")
-ACENTO_HOVER = ("#9C1449", "#C2185B")
+ACENTO = ("#2F6690", "#3A7CA5")        # azul acero: sobrio y legible en claro/oscuro
+ACENTO_HOVER = ("#24506F", "#2F6690")
 SUAVE = ("gray40", "gray65")
-TARJETA = ("gray96", "gray23")
-VERDE, AMBAR, GRIS = ("#1B873F", "#3FB950"), ("#B7791F", "#E3B341"), ("gray50", "gray55")
+TARJETA = ("#F3F5F7", "#262A2F")
+BORDE = ("#DDE2E7", "#343A40")
+VERDE, AMBAR, GRIS = ("#2E7D5B", "#6BBF94"), ("#9A6B1F", "#D4A85E"), ("gray50", "gray55")
 
 AVISO_CORTO = "Software independiente de Shameless Company · NO es un producto oficial del SENA."
 
@@ -241,7 +243,8 @@ class DialogoEspera(ctk.CTkToplevel):
                  al_cancelar: Callable[[], None] | None = None) -> None:
         super().__init__(master)
         self.title(titulo)
-        self.geometry("520x260")
+        x, y = self.winfo_screenwidth() - 560, self.winfo_screenheight() - 360
+        self.geometry(f"520x260+{max(0, x)}+{max(0, y)}")
         self.attributes("-topmost", True)
         self.al_cancelar = al_cancelar
         self.protocol("WM_DELETE_WINDOW", self._cancelar)
@@ -328,12 +331,14 @@ class App(ctk.CTk):
 
     def _encabezado(self) -> None:
         barra = ctk.CTkFrame(self, fg_color="transparent")
-        barra.grid(row=0, column=0, sticky="ew", padx=20, pady=(14, 4))
-        ctk.CTkLabel(barra, text="Patronix", font=ctk.CTkFont(size=24, weight="bold")).pack(side="left")
-        ctk.CTkLabel(barra, text="  by Shameless Company", text_color=ACENTO,
-                     font=ctk.CTkFont(size=14, weight="bold")).pack(side="left", pady=(6, 0))
-        ctk.CTkLabel(barra, text="  NO OFICIAL DEL SENA  ", corner_radius=10, fg_color=("gray85", "gray25"),
-                     font=ctk.CTkFont(size=11, weight="bold")).pack(side="right")
+        barra.grid(row=0, column=0, sticky="ew", padx=20, pady=(14, 6))
+        titulos = ctk.CTkFrame(barra, fg_color="transparent")
+        titulos.pack(side="left")
+        ctk.CTkLabel(titulos, text="Patronix", font=ctk.CTkFont(size=24, weight="bold")).pack(anchor="w")
+        ctk.CTkLabel(titulos, text="Asistente de etapa productiva · by Shameless Company",
+                     text_color=SUAVE, font=ctk.CTkFont(size=12)).pack(anchor="w")
+        ctk.CTkLabel(barra, text="  No oficial del SENA  ", corner_radius=8, fg_color=TARJETA,
+                     text_color=SUAVE, font=ctk.CTkFont(size=11)).pack(side="right")
 
     def _pie(self) -> None:
         pie = ctk.CTkFrame(self, fg_color="transparent")
@@ -344,10 +349,14 @@ class App(ctk.CTk):
     # ------------------------------------------------------------------ pestaña Buscar
     def _tab_buscar(self, tab: ctk.CTkFrame) -> None:
         tab.grid_columnconfigure(0, weight=1)
-        tab.grid_rowconfigure(2, weight=1)
+        tab.grid_rowconfigure(3, weight=1)
 
-        acciones = ctk.CTkFrame(tab, fg_color=TARJETA, corner_radius=12)
-        acciones.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 10))
+        self.marco_pasos = ctk.CTkFrame(tab, fg_color="transparent")
+        self.marco_pasos.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 8))
+        self.marco_pasos.grid_columnconfigure((0, 1, 2), weight=1, uniform="paso")
+
+        acciones = ctk.CTkFrame(tab, fg_color=TARJETA, corner_radius=12, border_width=1, border_color=BORDE)
+        acciones.grid(row=1, column=0, sticky="ew", padx=4, pady=(0, 10))
         acciones.grid_columnconfigure(1, weight=1)
         self.btn_buscar = ctk.CTkButton(
             acciones, text="Buscar vacantes", height=48, width=210, corner_radius=10,
@@ -366,7 +375,7 @@ class App(ctk.CTk):
         self.btn_detener.grid(row=0, column=2, rowspan=2, padx=(0, 16))
 
         cab = ctk.CTkFrame(tab, fg_color="transparent")
-        cab.grid(row=1, column=0, sticky="ew", padx=6)
+        cab.grid(row=2, column=0, sticky="ew", padx=6)
         self.lbl_resultados = ctk.CTkLabel(cab, text="Tus vacantes", font=ctk.CTkFont(size=16, weight="bold"))
         self.lbl_resultados.pack(side="left")
         ctk.CTkButton(cab, text="Abrir carpeta de postulaciones", width=210, fg_color="transparent",
@@ -374,19 +383,38 @@ class App(ctk.CTk):
                       command=lambda: abrir_ruta(self.settings.output_dir)).pack(side="right")
 
         self.lista = ctk.CTkScrollableFrame(tab, fg_color="transparent")
-        self.lista.grid(row=2, column=0, sticky="nsew", padx=0, pady=(6, 6))
+        self.lista.grid(row=3, column=0, sticky="nsew", padx=0, pady=(6, 6))
         self.lista.grid_columnconfigure(0, weight=1)
 
         self.var_log = ctk.BooleanVar(value=False)
         ctk.CTkSwitch(tab, text="Ver registro detallado", variable=self.var_log,
-                      command=self._toggle_log, progress_color=ACENTO).grid(row=3, column=0, sticky="w", padx=6)
+                      command=self._toggle_log, progress_color=ACENTO).grid(row=4, column=0, sticky="w", padx=6)
         self.caja_log = ctk.CTkTextbox(tab, height=150, font=ctk.CTkFont(family="Consolas", size=12))
         self.caja_log.configure(state="disabled")
         self._pintar_resultados()
+        self._pintar_pasos()
+
+    def _pintar_pasos(self) -> None:
+        """Tres pasos con su estado: el usuario ve qué falta y llega ahí con un clic."""
+        for w in self.marco_pasos.winfo_children():
+            w.destroy()
+        pasos = (
+            ("1. Tu perfil", not problemas_perfil(self.perfil), "  Mi perfil  "),
+            ("2. Tu cuenta de Caprendizaje", bool(self.ajustes.sena_user), "  Cuenta y ajustes  "),
+            ("3. Página de convocatorias", bool(self.ajustes.sgva_vacantes_url), "  Cuenta y ajustes  "),
+        )
+        for col, (titulo, listo, destino) in enumerate(pasos):
+            ctk.CTkButton(
+                self.marco_pasos, text=f"{'✓' if listo else '○'}  {titulo}", anchor="w", height=36,
+                corner_radius=8, border_width=1, border_color=BORDE,
+                fg_color=TARJETA, hover_color=BORDE,
+                text_color=VERDE if listo else ("gray25", "gray80"),
+                command=lambda d=destino: self.ir_a(d),
+            ).grid(row=0, column=col, sticky="ew", padx=(0 if col == 0 else 4, 0))
 
     def _toggle_log(self) -> None:
         if self.var_log.get():
-            self.caja_log.grid(row=4, column=0, sticky="ew", padx=4, pady=(6, 0))
+            self.caja_log.grid(row=5, column=0, sticky="ew", padx=4, pady=(6, 0))
         else:
             self.caja_log.grid_forget()
 
@@ -415,7 +443,7 @@ class App(ctk.CTk):
             self._tarjeta(i, r)
 
     def _tarjeta(self, fila: int, r: dict) -> None:
-        card = ctk.CTkFrame(self.lista, fg_color=TARJETA, corner_radius=12)
+        card = ctk.CTkFrame(self.lista, fg_color=TARJETA, corner_radius=12, border_width=1, border_color=BORDE)
         card.grid(row=fila, column=0, sticky="ew", padx=4, pady=4)
         card.grid_columnconfigure(1, weight=1)
 
@@ -668,6 +696,7 @@ class App(ctk.CTk):
             self.lbl_perfil.configure(text="Perfil guardado.")
         if not silencioso and not faltan:
             log.info("Perfil guardado.")
+        self._pintar_pasos()
         return not faltan
 
     # ------------------------------------------------------------------ pestaña Cuenta
@@ -738,14 +767,14 @@ class App(ctk.CTk):
 
         seccion("Navegador")
         ctk.CTkLabel(marco, text="Usar").grid(row=fila, column=0, sticky="w", padx=(6, 12), pady=4)
-        self.nav_opciones = {"Microsoft Edge (recomendado)": "msedge", "Google Chrome": "chrome"}
-        if not FROZEN:
-            self.nav_opciones["Chromium de Playwright"] = ""
-        self.w["navegador"] = ctk.CTkOptionMenu(marco, values=list(self.nav_opciones),
+        self.nav_opciones = dict(NAVEGADORES)
+        self.w["navegador"] = ctk.CTkOptionMenu(marco, values=list(self.nav_opciones), width=280,
                                                 fg_color=ACENTO, button_color=ACENTO_HOVER)
         self.w["navegador"].set(next((k for k, v in self.nav_opciones.items() if v == a.navegador),
-                                     "Microsoft Edge (recomendado)"))
+                                     next(iter(self.nav_opciones))))
         self.w["navegador"].grid(row=fila, column=1, sticky="w", pady=4)
+        ctk.CTkLabel(marco, text="  Si el elegido no está instalado se usa el siguiente disponible.",
+                     text_color=SUAVE).grid(row=fila, column=1, sticky="e", pady=4)
         fila += 1
         self.var_mostrar = ctk.BooleanVar(value=a.mostrar_navegador)
         ctk.CTkCheckBox(marco, text="Mostrar el navegador mientras busca", variable=self.var_mostrar,
@@ -805,7 +834,7 @@ class App(ctk.CTk):
         a.programa_formacion = self.w["programa"].get().strip()
         a.palabras_clave = self.w["palabras"].get().strip() or palabras_sugeridas(a.programa_formacion)
         a.sgva_vacantes_url = self.w["url"].get().strip()
-        a.navegador = self.nav_opciones.get(self.w["navegador"].get(), "msedge")
+        a.navegador = self.nav_opciones.get(self.w["navegador"].get(), "auto")
         a.mostrar_navegador = self.var_mostrar.get()
         a.llm_provider = self.ia_opciones.get(self.w["ia"].get(), "ninguno")
         a.gemini_api_key = self.w["gemini"].get().strip()
@@ -821,6 +850,7 @@ class App(ctk.CTk):
             self.lbl_ajustes.configure(text="Ajustes guardados.")
         if not silencioso:
             log.info("Ajustes guardados.")
+        self._pintar_pasos()
 
     def borrar_sesion(self) -> None:
         if self.settings.session_path.exists():

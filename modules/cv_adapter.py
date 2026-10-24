@@ -301,13 +301,14 @@ class RenderizadorPDF:
         from playwright.sync_api import sync_playwright
 
         self._pw = sync_playwright().start()
-        candidatos = ([self.canal] if self.canal else []) + (["chrome"] if self.canal == "msedge" else [])
-        for canal in candidatos + [None]:
+        from modules.navegadores import candidatos
+
+        for nombre, opciones in candidatos(self.canal, headless=True):
             try:
-                self._browser = self._pw.chromium.launch(channel=canal, headless=True)
+                self._browser = self._pw.chromium.launch(**opciones)
                 return
             except Exception as exc:  # noqa: BLE001
-                log.debug("PDF: canal %s no disponible (%s)", canal or "chromium", exc)
+                log.debug("PDF: %s no disponible (%s)", nombre, exc)
         self.cerrar()
         raise RuntimeError("No hay navegador disponible para generar el PDF")
 
