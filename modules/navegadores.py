@@ -27,7 +27,10 @@ _RUTAS = {  # relativas a LOCALAPPDATA / ProgramFiles / ProgramFiles(x86)
 
 # Sin la bandera de automatización: el navegador se comporta como uno normal y los
 # firewalls del portal no frenan el inicio de sesión que haces tú a mano.
-ARGS = ["--disable-blink-features=AutomationControlled"]
+ARGS = [
+    "--disable-blink-features=AutomationControlled",
+    "--enable-features=HttpsFirstBalancedMode,HttpsUpgrades",
+]
 IGNORAR = ["--enable-automation"]
 
 

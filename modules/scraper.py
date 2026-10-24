@@ -234,6 +234,17 @@ class SGVAScraper:
             await prueba.close()
             opciones["user_agent"] = ua.replace("HeadlessChrome", "Chrome")
         self.context = await self._browser.new_context(storage_state=estado, **opciones)
+
+        # Blindaje contra redirects HTTP de ASP.NET del SENA (puerto 80 cerrado):
+        async def _forzar_https(route: Any, req: Any) -> None:
+            url = req.url
+            if url.startswith("http://caprendizaje.sena.edu.co"):
+                url = url.replace("http://", "https://", 1)
+                await route.continue_(url=url)
+            else:
+                await route.continue_()
+
+        await self.context.route("**/*", _forzar_https)
         self.context.set_default_timeout(self.s.timeout_ms)
         self.page = await self.context.new_page()
 
@@ -638,6 +649,13 @@ class SGVAScraper:
         try:
             await self._abrir(headless=False, usar_sesion=self.s.session_path.exists())
             await self._ir(self.s.sgva_vacantes_url or self.s.sgva_login_url)
+            # Asegurar que abre en pestaña Aprendices (no Empresas) y pre-diligencia
+            try:
+                await self._elegir_rol()
+                if self.s.credenciales_configuradas:
+                    await self._llenar_credenciales()
+            except Exception as exc:
+                log.debug("Aviso preparatorio de login: %s", exc)
             await asyncio.get_running_loop().run_in_executor(None, esperar)
             verificar_cancelacion()
             if self.context.pages:  # la tabla pudo quedar en otra pestaña
