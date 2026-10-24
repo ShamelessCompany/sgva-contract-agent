@@ -125,7 +125,7 @@ class Settings:
     sena_user: str = field(default_factory=lambda: _env("SENA_USER"))
     sena_password: str = field(default_factory=lambda: _env("SENA_PASSWORD"))
     sgva_login_url: str = field(
-        default_factory=lambda: _env("SGVA_LOGIN_URL", "https://caprendizaje.sena.edu.co/sgva/")
+        default_factory=lambda: _env("SGVA_LOGIN_URL", "https://caprendizaje.sena.edu.co/sgva/SGVA_Diseno/pag/login.aspx")
     )
     sgva_vacantes_url: str = field(default_factory=lambda: _env("SGVA_VACANTES_URL"))
     programa_formacion: str = field(

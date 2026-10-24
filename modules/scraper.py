@@ -254,13 +254,28 @@ class SGVAScraper:
     async def _pausa(self) -> None:
         await polite_delay_async(self.s.delay_min, self.s.delay_max)
 
-    @retry_async(intentos=3, backoff_base=5.0)
+    @retry_async(intentos=3, backoff_base=4.0)
     async def _ir(self, url: str) -> None:
         """Navegación con reintentos (maneja caídas de red y timeouts del portal)."""
-        await self.page.goto(url, wait_until="domcontentloaded")
+        url = (url or "").strip()
+        if not url:
+            url = self.s.sgva_login_url
+        if not url.startswith("http://") and not url.startswith("https://"):
+            url = f"https://{url}"
+        if "caprendizaje.sena.edu.co" in url:
+            url = url.replace("http://", "https://")
+            partes_validas = ("login", "detalle", "consulta", "solicitud", "convocatoria", "aspx")
+            if not any(p in url.lower() for p in partes_validas):
+                url = "https://caprendizaje.sena.edu.co/sgva/SGVA_Diseno/pag/login.aspx"
+        log.info("Navegando a: %s", url)
         try:
-            await self.page.wait_for_load_state("networkidle", timeout=15000)
-        except Exception:  # noqa: BLE001 - algunas páginas nunca quedan 'idle'
+            await self.page.goto(url, wait_until="domcontentloaded", timeout=45000)
+        except Exception as exc:
+            log.warning("Fallo al navegar a %s: %s", url, exc)
+            raise
+        try:
+            await self.page.wait_for_load_state("networkidle", timeout=8000)
+        except Exception:  # noqa: BLE001
             pass
 
     async def _primero_visible(self, candidatos: list[str] | str, timeout: int = 3000) -> Any:
